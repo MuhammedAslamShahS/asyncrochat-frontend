@@ -1,23 +1,70 @@
-import { useEffect } from "react";
+import { useState } from "react";
 
 function App() {
-  useEffect(() => {
-    const API = import.meta.env.VITE_API_URL;
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [result, setResult] = useState("");
 
-    fetch(`${API}/api/auth/login`)
-      .then(res => res.text())
-      .then(data => {
-        console.log("Backend says:", data);
-      })
-      .catch(err => {
-        console.error("API error:", err);
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setResult("Sending request...");
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email,
+          password,
+        }),
       });
-  }, []);
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      setResult(JSON.stringify(data, null, 2));
+    } catch (err) {
+      setResult(err.message);
+    }
+  };
 
   return (
-    <div style={{ padding: "40px" }}>
-      <h1>AsyncroChat Frontend</h1>
-      <p>Check console for backend response</p>
+    <div style={{ padding: "40px", fontFamily: "Arial" }}>
+      <h1>Asyncro Chat Login</h1>
+
+      <form onSubmit={handleLogin}>
+        <div>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+
+        <div style={{ marginTop: "10px" }}>
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        <button style={{ marginTop: "15px" }} type="submit">
+          Login
+        </button>
+      </form>
+
+      <pre style={{ marginTop: "20px" }}>{result}</pre>
     </div>
   );
 }
